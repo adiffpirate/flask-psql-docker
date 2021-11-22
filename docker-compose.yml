@@ -7,16 +7,15 @@ services:
       args:
         PYTHON_VERSION: $APP_PYTHON_VERSION
     environment:
-      FLASK_APP: $APP_NAME
       FLASK_ENV: $ENV
       DB_USER: $DB_USER
       DB_PASSWORD: $DB_PASSWORD
       DB_DATABASE: $DB_DATABASE
       DB_HOST: "db"
-      DB_PORT: 5432
+      DB_PORT: $DB_PORT
     ports:
       - target: 5000
-        published: 8080
+        published: $APP_PORT
         mode: host
 
   db:
@@ -27,7 +26,7 @@ services:
       POSTGRES_DB: $DB_DATABASE
     ports:
       - target: 5432
-        published: 5432
+        published: $DB_PORT
         mode: host
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -39,7 +38,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: $DB_ADMIN_PASSWORD
     ports:
       - target: 80
-        published: 7777
+        published: $DB_ADMIN_PORT
         mode: host
     depends_on:
       - db
