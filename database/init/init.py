@@ -83,7 +83,7 @@ class Populate(Connection):
     def create_partidos(self, csv_filepath):
         try:
             print("Creating partidos")
-            partidos_iterator = csv.reader(open(csv_filepath), delimiter=';')
+            partidos_iterator = csv.reader(open(csv_filepath))
         except Exception as e:
             print(f"Error when reading csv file containing partidos\n{e}")
             exit(1)
@@ -111,7 +111,7 @@ class Populate(Connection):
     def create_individuos(self, csv_filepath):
         try:
             print("Creating individuos")
-            individuos_iterator = csv.reader(open(csv_filepath), delimiter=';')
+            individuos_iterator = csv.reader(open(csv_filepath))
         except Exception as e:
             print(f"Error when reading csv file containing individuos\n{e}")
             exit(1)
