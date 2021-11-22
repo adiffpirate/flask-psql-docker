@@ -1,6 +1,6 @@
 CREATE TABLE Partido(
-    Nome varchar(35) PRIMARY KEY,
-    Sigla varchar(4),
+    Nome varchar(50) PRIMARY KEY,
+    Sigla varchar(5),
     Numero int,
     Programa varchar(20000)
 );
@@ -8,8 +8,8 @@ CREATE TABLE Partido(
 CREATE TABLE Individuo(
     Nome varchar(35) PRIMARY KEY,
     Tipo varchar(4),
-    CPF_CNPJ int,
-    Partido varchar(5),
+    CPF_CNPJ bigint UNIQUE,
+    Partido varchar(50),
     FOREIGN KEY (Partido) REFERENCES Partido(Nome)
 );
 
