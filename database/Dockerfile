@@ -1,0 +1,2 @@
+ARG DB_VERSION
+FROM postgres:$DB_VERSION
