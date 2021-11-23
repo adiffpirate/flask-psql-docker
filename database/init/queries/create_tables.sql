@@ -5,12 +5,13 @@ CREATE TABLE Partido(
     Programa varchar(20000)
 );
 
+
 CREATE TABLE Individuo(
     Nome varchar(35) PRIMARY KEY,
     Tipo varchar(4),
     CPF_CNPJ bigint UNIQUE,
     Partido varchar(50),
-    FOREIGN KEY (Partido) REFERENCES Partido(Nome)
+    FOREIGN KEY (Partido) REFERENCES Partido(Nome) ON DELETE CASCADE
 );
 
 CREATE TABLE ProcessoJudicial(
@@ -18,7 +19,7 @@ CREATE TABLE ProcessoJudicial(
     Procedente boolean,
     DataTermino date,
     Reu varchar(35),
-    FOREIGN KEY (Reu) REFERENCES Individuo(Nome)
+    FOREIGN KEY (Reu) REFERENCES Individuo(Nome) ON DELETE CASCADE
 );
 
 CREATE TABLE Pleito(
@@ -33,10 +34,11 @@ CREATE TABLE Candidatura(
     ViceCandidato varchar(35) UNIQUE,
     Numero int NOT NULL,
     Pleito int NOT NULL,
+    NomeCargo varchar(35),
     PRIMARY KEY(Candidato,Ano),
-    FOREIGN KEY (Candidato) REFERENCES Individuo(Nome),
-    FOREIGN KEY (ViceCandidato) REFERENCES Individuo(Nome),
-    FOREIGN KEY (Pleito) REFERENCES Pleito(PleitoId)
+    FOREIGN KEY (Candidato) REFERENCES Individuo(Nome) ON DELETE CASCADE,
+    FOREIGN KEY (ViceCandidato) REFERENCES Individuo(Nome) ON DELETE CASCADE,
+    FOREIGN KEY (Pleito) REFERENCES Pleito(PleitoId) ON DELETE CASCADE
 );
 
 CREATE TABLE Cargo(
@@ -46,7 +48,7 @@ CREATE TABLE Cargo(
     Referencia varchar(35),
     Vigencia date,
     PRIMARY KEY(Candidato,Ano),
-    FOREIGN KEY (Candidato,Ano) REFERENCES Candidatura(Candidato,Ano)
+    FOREIGN KEY (Candidato,Ano) REFERENCES Candidatura(Candidato,Ano) ON DELETE CASCADE
 );
 
 
@@ -55,8 +57,8 @@ CREATE TABLE EquipeDeApoio(
     Ano int,
     Apoiador varchar(35),
     PRIMARY KEY(Apoiador,Ano),
-    FOREIGN KEY (Candidato,Ano) REFERENCES Candidatura(Candidato,Ano),
-    FOREIGN KEY (Apoiador) REFERENCES Individuo(Nome)
+    FOREIGN KEY (Candidato,Ano) REFERENCES Candidatura(Candidato,Ano) ON DELETE CASCADE,
+    FOREIGN KEY (Apoiador) REFERENCES Individuo(Nome) ON DELETE CASCADE
 );
 
 
@@ -66,6 +68,7 @@ CREATE TABLE Doacao(
     Apoiador varchar(35),
     Valor int,
     PRIMARY KEY(Apoiador,Ano),
-    FOREIGN KEY (Candidato,Ano) REFERENCES Candidatura(Candidato,Ano),
-    FOREIGN KEY (Apoiador) REFERENCES Individuo(Nome)
+    FOREIGN KEY (Candidato,Ano) REFERENCES Candidatura(Candidato,Ano) ON DELETE CASCADE,
+    FOREIGN KEY (Apoiador) REFERENCES Individuo(Nome) ON DELETE CASCADE
 );
+
