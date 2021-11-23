@@ -31,3 +31,25 @@ docker-compose -f docker-compose.yml -f docker-compose.override.dev.yml up --bui
 ```
 
 The PGAdmin will be availabe at http://localhost:7777
+
+### Init script
+
+There's a python script to initialize the database, you can it as a standalone script.
+
+The only requirement is to configure the following environment variables with your database info:
+  - DB_USER
+  - DB_PASSWORD
+  - DB_DATABASE
+  - DB_HOST
+  - DB_PORT
+
+After that, simply go to the init directory and run `init.py`
+```sh
+cd database/init
+```
+```sh
+python3 init.py
+```
+
+> The first line of the main fuction defines the random seed to use.
+> It's hardcoded now so we can have some previsibility, but you can change that.
