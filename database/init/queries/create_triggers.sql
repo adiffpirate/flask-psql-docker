@@ -8,7 +8,9 @@ BEGIN
             SELECT (ViceCandidato, Ano) FROM Candidatura WHERE (ViceCandidato = new.Candidato AND Ano = new.Ano)
         )
     ) THEN
-        RAISE EXCEPTION 'Atualização inválida. Este indivíduo já se candidatou a um cargo nesse ano.';
+        RAISE EXCEPTION 'Atualização inválida. Este candidato já se candidatou a um cargo nesse ano.';
+    ELSE
+        RETURN NEW;
     END IF;
 END;
 $check_candidato$ LANGUAGE plpgsql;
@@ -27,7 +29,9 @@ BEGIN
             SELECT (ViceCandidato, Ano) FROM Candidatura WHERE (ViceCandidato = new.ViceCandidato AND Ano = new.Ano)
         )
     ) THEN
-        RAISE EXCEPTION 'Atualização inválida. Este indivíduo já se candidatou a um cargo nesse ano.';
+        RAISE EXCEPTION 'Atualização inválida. O vice-candidato já se candidatou a um cargo nesse ano.';
+    ELSE
+        RETURN NEW;
     END IF;
 END;
 $check_vice$ LANGUAGE plpgsql;
@@ -47,8 +51,9 @@ BEGIN
     IF EXISTS (
         SELECT (Reu, Procedente, DataTermino) FROM ProcessoJudicial WHERE (Reu = new.ViceCandidato AND Procedente = TRUE AND (date_part('year', DataTermino) - new.Ano) < 5)
     ) THEN
-        RAISE EXCEPTION 'Atualização inválida. O vice-candidato não é ficha limpa.';
+        RAISE EXCEPTION 'Atualização inválida. O vice-candidato não é ficha limpa.';  
     END IF;
+    RETURN NEW;
 END;
 $check_ficha$ LANGUAGE plpgsql;
 
@@ -59,91 +64,16 @@ CREATE TRIGGER VerificaFicha
 -- muda data de término do processo quando inserir procedente true/false
 CREATE OR REPLACE FUNCTION check_proc() RETURNS trigger AS $check_proc$
 BEGIN
-    IF old.Procedente IS NULL AND new.Procedente IS NOT NULL AND new.DataTermino IS NULL AND old.DataTermino IS NULL THEN
-        new.DataTermino = now();
+    IF (old.Procedente IS NULL) AND (new.Procedente IS NOT NULL) AND (new.DataTermino IS NULL) AND (old.DataTermino IS NULL) THEN
+        new.DataTermino := now();
     END IF;
+    RETURN NEW;
 END;
 $check_proc$ LANGUAGE plpgsql;
 
 CREATE TRIGGER VerificaDataTermino
     BEFORE UPDATE ON ProcessoJudicial
     FOR EACH ROW EXECUTE PROCEDURE check_proc();
-
-
--- Cada cargo deve ter uma quantidade de eleitos – por exemplo, a presidência só pode ter um único
--- eleito; o cargo de deputado federal pode ter até 500 eleitos;
-
--- verifica se presidente adicionado é o presidente eleito
-CREATE OR REPLACE FUNCTION check_pres() RETURNS trigger AS $check_pres$
-BEGIN
-    SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON Candidatura.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Presidente' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 1;
-    IF c.Candidato <> new.Candidato THEN
-        RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Presidente no ano indicado.';
-    END IF;
-END;
-$check_pres$ LANGUAGE plpgsql;
-
-CREATE TRIGGER VerificaPresidente
-    BEFORE INSERT OR UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_pres();
-
--- verifica se o dep. federal adicionado foi eleito
-CREATE OR REPLACE FUNCTION check_dep() RETURNS trigger AS $check_dep$
-BEGIN
-    SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON Candidatura.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'DepFederal' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 500;
-    IF NOT EXISTS (SELECT * FROM c WHERE Candidato = new.Candidato) THEN
-        RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Deputado Federal no ano indicado.';
-    END IF;
-END;
-$check_dep$ LANGUAGE plpgsql;
-
-CREATE TRIGGER VerificaDeputado
-    BEFORE INSERT OR UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_dep();
-
--- verifica se o senador adicionado foi eleito
-CREATE OR REPLACE FUNCTION check_senador() RETURNS trigger AS $check_senador$
-BEGIN
-    SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON Candidatura.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Senador' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 81;
-    IF NOT EXISTS (SELECT * FROM c WHERE Candidato = new.Candidato) THEN
-        RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Senador no ano indicado.';
-    END IF;
-END;
-$check_senador$ LANGUAGE plpgsql;
-
-CREATE TRIGGER VerificaSenador
-    BEFORE INSERT OR UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_senador();
-
--- verifica se o governador adicionado éfoi eleito
-CREATE OR REPLACE FUNCTION check_gov() RETURNS trigger AS $check_gov$
-BEGIN
-    SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON Candidatura.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Governador' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 1;
-    IF c.Candidato <> new.Candidato THEN
-        RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Governador no ano indicado.';
-    END IF;
-END;
-$check_gov$ LANGUAGE plpgsql;
-
-CREATE TRIGGER VerificaGovernador
-    BEFORE INSERT OR UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_gov();
-
--- verifica se o prefeito adicionado foi eleito
-CREATE OR REPLACE FUNCTION check_pref() RETURNS trigger AS $check_pref$
-BEGIN
-    SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON Candidatura.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Prefeito' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 1;
-    IF c.Candidato <> new.Candidato THEN
-        RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Prefeito no ano indicado.';
-    END IF;
-END;
-$check_pref$ LANGUAGE plpgsql;
-
-CREATE TRIGGER VerificaPrefeito
-    BEFORE INSERT OR UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_pref();
-
-
 
 -- verifica se indivíduo já faz parte de alguma equipe de apoio no ano determinado
 CREATE OR REPLACE FUNCTION check_equipe() RETURNS trigger AS $check_equipe$
@@ -152,6 +82,8 @@ BEGIN
         SELECT (Apoiador, Ano) FROM EquipeDeApoio WHERE (Apoiador = new.Apoiador AND Ano = new.Ano)
     ) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo já faz parte de uma equipe de apoio.';
+    ELSE
+        RETURN NEW;
     END IF;
 END;
 $check_equipe$ LANGUAGE plpgsql;

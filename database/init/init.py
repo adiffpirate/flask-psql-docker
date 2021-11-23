@@ -12,6 +12,10 @@ def main():
     populate.create_partidos('test_data/partidos.csv')
     populate.create_individuos('test_data/individuos.csv')
     populate.create_processos_judiciais()
+    populate.create_pleitos_and_candidaturas('test_data/referencias.csv')
+    populate.create_cargos('test_data/referencias.csv')
+    populate.create_equipes_de_apoio()
+    populate.create_doacoes()
 
 # Config access to database
 class Config:
@@ -170,19 +174,17 @@ class Populate(Connection):
         # Get list of individuos from database
         individuos = self.query("SELECT nome FROM individuo WHERE tipo = 'PF'")
 
-        processos_amount = random.randint(50, len(individuos))
-        for i in range(processos_amount):
-            try:
-                # Procedente
-                procedente = random.choice([True, False])
-                # Reu
-                reu = random.choice(individuos)
-                # Run query
-                sql = 'INSERT INTO processojudicial (procedente, reu) values (%s, %s)'
-                self.execute(sql, [procedente, reu])
-                print(f"Processo Judicial ({procedente} | {reu}) created")
-            except Exception as e:
-                print(f"Error when creating processojudicial\n{e}")
+        for reu in individuos:
+            if random.choice([True, False]):
+                try:
+                    # Procedente
+                    procedente = random.choice([True, False])
+                    # Run query
+                    sql = 'INSERT INTO processojudicial (procedente, reu) values (%s, %s)'
+                    self.execute(sql, [procedente, reu])
+                    print(f"Processo Judicial ({procedente} | {reu}) created")
+                except Exception as e:
+                    print(f"Error when creating processojudicial\n{e}")
 
 
     def create_pleitos_and_candidaturas(self, csv_filepath):
@@ -193,38 +195,88 @@ class Populate(Connection):
             exit(1)
 
         # Parse referencias csv file
-        country = set()
-        state = set()
-        city = set()
+        country = list()
+        state = list()
+        city = list()
         for ref in referencias_iterator:
             name = ref[0]
             category = ref[1]
             if category == 'país':
-                country.add(name)
+                country.append(name)
             elif category == 'estado':
-                state.add(name)
+                state.append(name)
             elif category == 'cidade':
-                city.add(name)
+                city.append(name)
 
         # Get list of individuos from database
         individuos = self.query("SELECT nome FROM individuo WHERE tipo = 'PF'")
 
-        candidaturas_amount = random.randint(200, len(individuos))
-        for i in range(candidaturas_amount):
+        i = 0
+        for candidato in individuos:
+            if random.choice([True, False]):
+                try:
+                    # Create pleito
+                    total_de_votos = random.randint(1, 100000000) if random.choice([True, False]) else None
+                    pleito = i
+                    self.execute(
+                        "INSERT INTO pleito (pleitoid, totaldevotos) VALUES (%s, %s)",
+                        [pleito, total_de_votos]
+                    )
+                    print(f"Pleito ({i} | {total_de_votos}) created")
+                    # Create candidatura
+                    ano = random.randint(2000, 2021)
+                    vice_candidato = random.choice(individuos) if random.choice([True, False]) else 'NULL'
+                    numero = random.randint(10, 999999)
+                    nomecargo = random.choice(['Presidente', 'DepFederal', 'Senador', 'Governador', 'Prefeito'])
+                    if nomecargo == 'Presidente':
+                        referencia = random.choice(country)
+                    elif nomecargo == 'DepFederal':
+                        referencia = random.choice(country)
+                    elif nomecargo == 'Senador':
+                        referencia = random.choice(country)
+                    elif nomecargo == 'Governador':
+                        referencia = random.choice(state)
+                    elif nomecargo == 'Prefeito':
+                        referencia = random.choice(city)
+                    self.execute(
+                        "INSERT INTO candidatura (candidato, ano, vicecandidato, numero, pleito, nomecargo, referencia) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                        [candidato, ano, vice_candidato, numero, pleito, nomecargo, referencia]
+                    )
+                    print(f"Candidatura ({candidato} | {ano} | {vice_candidato} | {numero} | {pleito} | {nomecargo} | {referencia}) created")
+                    i = i + 1
+                except Exception as e:
+                    print(f"Error when creating pleitos and candidaturas\n{e}")
+
+
+    def create_cargos(self, csv_filepath):
+        try:
+            referencias_iterator = csv.reader(open(csv_filepath))
+        except Exception as e:
+            print(f"Error when reading csv file containing referencias\n{e}")
+            exit(1)
+
+        # Parse referencias csv file
+        country = list()
+        state = list()
+        city = list()
+        for ref in referencias_iterator:
+            name = ref[0]
+            category = ref[1]
+            if category == 'país':
+                country.append(name)
+            elif category == 'estado':
+                state.append(name)
+            elif category == 'cidade':
+                city.append(name)
+
+        # Get list of individuos from database
+        individuos = self.query("SELECT nome FROM individuo WHERE tipo = 'PF'")
+
+        cargos_attempts_amount = 1000
+        for i in range(cargos_attempts_amount):
             try:
-                # Create pleito
-                total_de_votos = random.randint(1, 100000000) if random.choice([True, False]) else None
-                pleito = i
-                self.execute(
-                    "INSERT INTO pleito (pleitoid, totaldevotos) VALUES (%s, %s)",
-                    [pleito, total_de_votos]
-                )
-                print(f"Pleito ({i} | {total_de_votos}) created")
-                # Create candidatura
                 candidato = random.choice(individuos)
-                ano = random.choice(2000, 2021)
-                vice_candidato = random.choice(individuos) if random.choice([True, False]) else None
-                numero = random.randint(10, 999999)
+                ano = random.randint(2000, 2021)
                 nomecargo = random.choice(['Presidente', 'DepFederal', 'Senador', 'Governador', 'Prefeito'])
                 if nomecargo == 'Presidente':
                     referencia = random.choice(country)
@@ -237,12 +289,55 @@ class Populate(Connection):
                 elif nomecargo == 'Prefeito':
                     referencia = random.choice(city)
                 self.execute(
-                    "INSERT INTO candidatura (candidato, ano, vicecandidato, numero, pleito, nomecargo, referencia) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                    [candidato, ano, vice_candidato, numero, pleito, nomecargo, referencia]
+                    "INSERT INTO cargo (candidato, ano, nomecargo, referencia) VALUES (%s, %s, %s, %s)",
+                    [candidato, ano, nomecargo, referencia]
                 )
-                print(f"Candidatura ({candidato} | {ano} | {vice_candidato} | {numero} | {pleito} | {nomecargo} | {referencia}) created")
+                print(f"Cargo ({candidato} | {ano} | {nomecargo} | {referencia}) created")
             except Exception as e:
-                print(f"Error when creating processojudicial\n{e}")
+                print(f"Error when creating cargos\n{e}")
+
+
+    def create_equipes_de_apoio(self):
+        # Get list of individuos from database
+        individuos = self.query("SELECT nome FROM individuo")
+        # Get list of candidatos from database
+        candidatos = self.query("SELECT candidato FROM candidatura")
+
+        equipes_attempts_amount = 1000
+        for i in range(equipes_attempts_amount):
+            try:
+                candidato = random.choice(candidatos)
+                ano = random.randint(2000, 2021)
+                apoiador = random.choice(individuos)
+                self.execute(
+                    "INSERT INTO equipedeapoio (candidato, ano, apoiador) VALUES (%s, %s, %s)",
+                    [candidato, ano, apoiador]
+                )
+                print(f"Equipe de apoio ({candidato} | {ano} | {apoiador}) created")
+            except Exception as e:
+                print(f"Error when creating cargos\n{e}")
+
+
+    def create_doacoes(self):
+        # Get list of individuos from database
+        individuos = self.query("SELECT nome FROM individuo")
+        # Get list of candidatos from database
+        candidatos = self.query("SELECT candidato FROM candidatura")
+
+        doacoes_attempts_amount = 1000
+        for i in range(doacoes_attempts_amount):
+            try:
+                candidato = random.choice(candidatos)
+                ano = random.randint(2000, 2021)
+                apoiador = random.choice(individuos)
+                valor = random.randint(10, 1000000)
+                self.execute(
+                    "INSERT INTO doacao (candidato, ano, apoiador, valor) VALUES (%s, %s, %s, %s)",
+                    [candidato, ano, apoiador, valor]
+                )
+                print(f"Doação ({candidato} | {ano} | {apoiador} | {valor}) created")
+            except Exception as e:
+                print(f"Error when creating doações\n{e}")
 
 if __name__ == "__main__":
     main()

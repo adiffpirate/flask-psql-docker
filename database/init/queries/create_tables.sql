@@ -16,7 +16,7 @@ CREATE TABLE Individuo(
 );
 
 CREATE TABLE ProcessoJudicial(
-    ProcessId int PRIMARY KEY,
+    ProcessId SERIAL PRIMARY KEY,
     Procedente boolean,
     DataTermino date,
     Reu varchar(35),
@@ -32,14 +32,13 @@ CREATE TABLE Pleito(
 CREATE TABLE Candidatura(
     Candidato varchar(35),
     Ano int,
-    ViceCandidato varchar(35) UNIQUE,
+    ViceCandidato varchar(35) REFERENCES Individuo(Nome) ON DELETE CASCADE,
     Numero int NOT NULL,
     Pleito int NOT NULL,
     NomeCargo nome_cargo,
     Referencia varchar(35),
     PRIMARY KEY(Candidato,Ano),
     FOREIGN KEY (Candidato) REFERENCES Individuo(Nome) ON DELETE CASCADE,
-    FOREIGN KEY (ViceCandidato) REFERENCES Individuo(Nome) ON DELETE CASCADE,
     FOREIGN KEY (Pleito) REFERENCES Pleito(PleitoId) ON DELETE CASCADE
 );
 

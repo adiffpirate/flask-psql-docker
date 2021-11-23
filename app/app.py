@@ -21,5 +21,21 @@ def delete_all():
     table = request.args.get("table")
     deleted_rows_count = db.execute(f"DELETE FROM {table}")
     deleted_all_warning = f"{deleted_rows_count} were deleted from {table}"
-
     return render_template('homepage.html', deleted_all_warning=deleted_all_warning)
+
+@app.route('/relatorio')
+def report():
+    subject = request.args.get("assunto")
+    if subject == "candidaturas":
+        headers = ['Nome', 'Cargo', 'Ano']
+        rows = db.query(f"SELECT nome,nomecargo,ano FROM cargo RIGHT JOIN individuo ON cargo.candidato=individuo.nome")
+    if subject == "fichas-limpas":
+        headers = ['Reu', 'Procedente', 'DataTermino']
+        rows = db.query(
+            "SELECT (Reu, Procedente, DataTermino) FROM ProcessoJudicial "
+            "WHERE (Reu = new.Candidato AND Procedente = TRUE AND (date_part('year', DataTermino) - new.Ano) < 5)"
+        )
+    else:
+        headers = []
+        rows = []
+    return render_template('table.html', headers=headers, rows=rows)
