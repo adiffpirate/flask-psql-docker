@@ -339,5 +339,6 @@ class Populate(Connection):
             except Exception as e:
                 print(f"Error when creating doações\n{e}")
 
+
 if __name__ == "__main__":
     main()

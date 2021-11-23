@@ -16,6 +16,16 @@ def select_all():
     rows = db.query(f"SELECT * FROM {table}")
     return render_template('table.html', headers=headers, rows=rows)
 
+@app.route('/consulta')
+def select():
+    table = request.args.get("tabela")
+    fields = request.args.getlist("campo")
+    order_by = request.args.get("ordenar-por") if 'ordenar-por' in request.args else fields[0]
+    query = f"SELECT {','.join(fields)} FROM {table} ORDER BY {order_by}"
+    app.logger.info("Listing table: " + query)
+    rows = db.query(query)
+    return render_template('table.html', headers=fields, rows=rows)
+
 @app.route('/delete/all')
 def delete_all():
     table = request.args.get("table")
@@ -29,12 +39,12 @@ def report():
     if subject == "candidaturas":
         headers = ['Nome', 'Cargo', 'Ano']
         rows = db.query(f"SELECT nome,nomecargo,ano FROM cargo RIGHT JOIN individuo ON cargo.candidato=individuo.nome")
-    if subject == "fichas-limpas":
-        headers = ['Reu', 'Procedente', 'DataTermino']
-        rows = db.query(
-            "SELECT (Reu, Procedente, DataTermino) FROM ProcessoJudicial "
-            "WHERE (Reu = new.Candidato AND Procedente = TRUE AND (date_part('year', DataTermino) - new.Ano) < 5)"
-        )
+    # if subject == "fichas-limpas":
+    #     headers = ['Reu', 'Procedente', 'DataTermino']
+    #     rows = db.query(
+    #         "SELECT (Reu, Procedente, DataTermino) FROM ProcessoJudicial "
+    #         "WHERE (Reu = new.Candidato AND Procedente = TRUE AND (date_part('year', DataTermino) - new.Ano) < 5)"
+    #     )
     else:
         headers = []
         rows = []
