@@ -5,10 +5,10 @@
 		#page-header {
 			padding-top: 12px;
 			padding-bottom: 12px;
-			background-color: #301934;
+			background-color: #050505;
 			text-align: center;
-			color: white;
-			display: table-caption;
+			color: lightgrey;
+			width: 100%;
 		}
 
 		#pretty {
@@ -54,6 +54,10 @@
 			clear: both;
 			display: table;
 		}
+
+		fieldset {
+			width: 30%;
+		}
 	</style>
 
 	<head>
@@ -66,7 +70,7 @@
 	<body>
 		<div class="container">
 
-			<div class="page-header row">
+			<div id="page-header" class="row">
 				<div class="column">
 					<a href="/"><img src="https://cdn-icons-png.flaticon.com/512/5167/5167574.png" width="100" height="100"></a>
 				</div>
@@ -82,19 +86,26 @@
 
 					<input type="hidden" name="tabela" id="table" value="{{ table }}">
 
-					<p>Filtrar pelos campos:</p>
-					{% for field in all_fields %}
-						<label for="{{ field }}">{{ field.title() }}</label>
-						<input type="checkbox" name="campo" id="field-{{ field }}" value="{{ field }}">
-					{% endfor %}
+					<fieldset>
+						<legend>Filtrar pelos campos</legend>
+						{% for field in all_fields %}
+							<input type="checkbox" name="campo" id="field-{{ field }}" value="{{ field }}">
+							<label for="{{ field }}">{{ field.title() }}</label>
+							<br>
+						{% endfor %}
+					</fieldset>
 
-					<p>Ordenar por:</p>
-					{% for field in all_fields %}
-						<label for="ordenar-por-{{ field }}">{{ field.title() }}</label>
-						<input type="radio" name="ordenar-por" id="order-by-{{ field }}" value="{{ field }}">
-					{% endfor %}
+					<br>
+					<fieldset >
+						<legend>Ordenar por</legend>
+						{% for field in all_fields %}
+							<input type="radio" name="ordenar-por" id="order-by-{{ field }}" value="{{ field }}">
+							<label for="ordenar-por-{{ field }}">{{ field.title() }}</label>
+							<br>
+						{% endfor %}
+					</fieldset>
 
-					<br><br>
+					<br>
 					<label for="where">Condição</label>
 					<input type="text" name="condicao" id="where">
 

@@ -57,9 +57,26 @@ BEGIN
 END;
 $check_ficha$ LANGUAGE plpgsql;
 
-CREATE TRIGGER VerificaFicha
+-- verifica se o candidato e o vice são filiados a um partido
+CREATE OR REPLACE FUNCTION check_partido() RETURNS trigger AS $check_partido$
+BEGIN
+    IF EXISTS (
+        SELECT (Nome, Partido) FROM Individuo WHERE (Nome = new.Candidato AND Partido IS NULL)
+    ) THEN
+        RAISE EXCEPTION 'Atualização inválida. O candidato não é filiado a um partido.';
+    END IF;
+    IF new.ViceCandidato IS NOT NULL AND EXISTS (
+        SELECT (Nome, Partido) FROM Individuo WHERE (Nome = new.ViceCandidato AND Partido IS NULL)
+    ) THEN
+        RAISE EXCEPTION 'Atualização inválida. O vice-candidato não é filiado a um partido.';  
+    END IF;
+    RETURN NEW;
+END;
+$check_partido$ LANGUAGE plpgsql;
+
+CREATE TRIGGER VerificaPartido
     BEFORE INSERT OR UPDATE ON Candidatura
-    FOR EACH ROW EXECUTE PROCEDURE check_ficha();
+    FOR EACH ROW EXECUTE PROCEDURE check_partido();
 
 -- muda data de término do processo quando inserir procedente true/false
 CREATE OR REPLACE FUNCTION check_proc() RETURNS trigger AS $check_proc$
@@ -84,7 +101,7 @@ CREATE OR REPLACE FUNCTION check_pres() RETURNS trigger AS $check_pres$
 BEGIN
     DROP TABLE IF EXISTS temp;
     CREATE TABLE temp AS SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON c.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Presidente' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 1;
-    IF (SELECT COUNT(*) FROM temp) >= 1 AND NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
+    IF NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Presidente no ano indicado.';
     ELSE
         RETURN NEW;
@@ -101,7 +118,7 @@ CREATE OR REPLACE FUNCTION check_dep() RETURNS trigger AS $check_dep$
 BEGIN
     DROP TABLE IF EXISTS temp;
     CREATE TABLE temp AS SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON c.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'DepFederal' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 500;
-    IF (SELECT COUNT(*) FROM temp) >= 500 AND NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
+    IF NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Deputado Federal no ano indicado.';
     ELSE
         RETURN NEW;
@@ -118,7 +135,7 @@ CREATE OR REPLACE FUNCTION check_senador() RETURNS trigger AS $check_senador$
 BEGIN
     DROP TABLE IF EXISTS temp;
     CREATE TABLE temp AS SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON c.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Senador' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 81;
-    IF (SELECT COUNT(*) FROM temp) >= 81 AND NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
+    IF NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Senador no ano indicado.';
     ELSE
         RETURN NEW;
@@ -135,7 +152,7 @@ CREATE OR REPLACE FUNCTION check_gov() RETURNS trigger AS $check_gov$
 BEGIN
     DROP TABLE IF EXISTS temp;
     CREATE TABLE temp AS SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON c.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Governador' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 1;
-    IF (SELECT COUNT(*) FROM temp) >= 1 AND NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
+    IF NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Governador no ano indicado.';
     ELSE
         RETURN NEW;
@@ -152,7 +169,7 @@ CREATE OR REPLACE FUNCTION check_pref() RETURNS trigger AS $check_pref$
 BEGIN
     DROP TABLE IF EXISTS temp;
     CREATE TABLE temp AS SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON c.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Prefeito' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 1;
-    IF (SELECT COUNT(*) FROM temp) >= 1 AND NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
+    IF NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Prefeito no ano indicado.';
     ELSE
         RETURN NEW;
@@ -163,8 +180,6 @@ $check_pref$ LANGUAGE plpgsql;
 CREATE TRIGGER VerificaPrefeito
     BEFORE INSERT OR UPDATE ON Cargo
     FOR EACH ROW EXECUTE PROCEDURE check_pref();
-
-
 
 -- verifica se indivíduo já faz parte de alguma equipe de apoio no ano determinado
 CREATE OR REPLACE FUNCTION check_equipe() RETURNS trigger AS $check_equipe$
@@ -184,16 +199,33 @@ CREATE TRIGGER VerificaEquipe
     FOR EACH ROW EXECUTE PROCEDURE check_equipe();
 
 -- atualiza vigência do cargo com base no ano de eleição
-CREATE OR REPLACE FUNCTION check_vig() RETURNS trigger AS $check_vig$
+CREATE OR REPLACE FUNCTION set_vigencia() RETURNS trigger AS $set_vigencia$
+DECLARE date_string TEXT;
 BEGIN
-    CONCAT(new.Ano, '0101') AS date_string;
-    IF () THEN
-        new.Vigencia := TO_DATE(date_string, 'YYYYMMDD') + interval '5 years';
-    END IF;
+    SELECT CONCAT(Ano, '-12-31') INTO date_string FROM Cargo WHERE (Candidato = new.Candidato AND Ano = new.Ano);
+    UPDATE Cargo SET Vigencia = (TO_DATE(date_string, 'YYYY-MM-DD') + interval '4 years') WHERE (Candidato = new.Candidato AND Ano = new.Ano);
     RETURN NEW;
 END;
-$check_vig$ LANGUAGE plpgsql;
+$set_vigencia$ LANGUAGE plpgsql;
 
-CREATE TRIGGER VerificaVigencia
-    AFTER UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_vig();
+CREATE TRIGGER SetVigencia
+    AFTER INSERT OR UPDATE ON Cargo
+    FOR EACH ROW EXECUTE PROCEDURE set_vigencia();
+
+-- verifica se indivíduo já fez uma doação na campanha atual do candidato
+CREATE OR REPLACE FUNCTION check_doacao() RETURNS trigger AS $check_doacao$
+BEGIN
+    SELECT Tipo INTO pessoa_tipo FROM Individuo WHERE (Nome = new.Apoiador);
+    IF pessoa_tipo = 'PJ' AND EXISTS (
+        SELECT (Apoiador, Candidato, Ano) FROM Doacao WHERE (Apoiador = new.Apoiador AND Candidato = new.Candidato AND Ano = new.Ano)
+    ) THEN
+        RAISE EXCEPTION 'Atualização inválida. O indivíduo já fez uma doação para este candidato nesta campanha.';
+    ELSE
+        RETURN NEW;
+    END IF;
+END;
+$check_doacao$ LANGUAGE plpgsql;
+
+CREATE TRIGGER VerificaDoacao
+    BEFORE INSERT OR UPDATE ON Doacao
+    FOR EACH ROW EXECUTE PROCEDURE check_doacao();
