@@ -2,13 +2,16 @@ import psycopg2 as psql
 import csv
 import os
 import random
+import datetime
 
 def main():
     random.seed(22)
     populate = Populate()
     populate.create_tables('queries/create_tables.sql')
+    # populate.create_triggers('queries/create_triggers.sql')
     populate.create_partidos('test_data/partidos.csv')
     populate.create_individuos('test_data/individuos.csv')
+    populate.create_processos_judiciais()
 
 # Config access to database
 class Config:
@@ -31,7 +34,7 @@ class Connection(Config):
             self.conn = psql.connect(**self.config['postgres'])
             self.cur = self.conn.cursor()
         except Exception as e:
-            print('Erro na conexão ao database', e)
+            logger.info('Erro na conexão ao database', e)
             exit(1)
 
     def __enter__(self):
@@ -52,15 +55,29 @@ class Connection(Config):
     def commit(self):
         self.connection.commit()
 
+    def rollback(self):
+        self.connection.rollback()
+
     def fetchall(self):
         return self.cursor.fetchall()
 
     def execute(self, sql, params=None):
-        self.cursor.execute(sql, params or ())
+        try:
+            self.cursor.execute(sql, params or ())
+            affected_rows_count = self.cursor.rowcount
+            self.commit()
+            return affected_rows_count
+        except:
+            self.rollback()
 
     def query(self, sql, params=None):
-        self.cursor.execute(sql, params or ())
-        return self.fetchall()
+        try:
+            self.cursor.execute(sql, params or ())
+            content = self.fetchall()
+            self.commit()
+            return content
+        except:
+            self.rollback()
 
 
 class Populate(Connection):
@@ -73,11 +90,21 @@ class Populate(Connection):
             print("Creating tables")
             queries = open(queries_filepath).read()
             self.execute(queries)
-            self.commit()
+            print("Successfully created tables")
         except Exception as e:
             print(f"Error when creating tables\n{e}")
             exit(1)
-        print("Successfully created tables")
+
+
+    def create_triggers(self, queries_filepath):
+        try:
+            print("Creating triggers")
+            queries = open(queries_filepath).read()
+            self.execute(queries)
+            print("Successfully created triggers")
+        except Exception as e:
+            print(f"Error when creating triggers\n{e}")
+            exit(1)
 
 
     def create_partidos(self, csv_filepath):
@@ -100,12 +127,9 @@ class Populate(Connection):
                 programa = partido[3]
                 sql = 'INSERT INTO partido (nome, sigla, numero, programa) values (%s, %s, %s, %s)'
                 self.execute(sql, [nome, sigla, numero, programa])
-                self.commit()
                 print(f"Partido ({nome} | {sigla} | {numero}) created")
             except Exception as e:
-                print(f"Error when creating partido {sigla}\n{e}")
-                exit(1)
-        print("Successfully created all partidos")
+                print(f"Error when creating partido\n{e}")
 
 
     def create_individuos(self, csv_filepath):
@@ -137,12 +161,28 @@ class Populate(Connection):
                 # Run query
                 sql = 'INSERT INTO individuo (nome, tipo, cpf_cnpj, partido) values (%s, %s, %s, %s)'
                 self.execute(sql, [nome, tipo, cpf_cnpj, partido])
-                self.commit()
                 print(f"Individuo ({nome} | {tipo} | {cpf_cnpj} | {partido}) created")
             except Exception as e:
-                print(f"Error when creating individuo {nome}:{cpf_cnpj}\n{e}")
-                exit(1)
-        print("Successfully created all individuos")
+                print(f"Error when creating individuo\n{e}")
+
+
+    def create_processos_judiciais(self):
+        # Get list of individuos from database
+        individuos = self.query("SELECT nome FROM individuo WHERE tipo = 'PF'")
+
+        processos_amount = random.randint(50, len(individuos))
+        for i in range(processos_amount):
+            try:
+                # Procedente
+                procedente = random.choice([True, False])
+                # Reu
+                reu = random.choice(individuos)
+                # Run query
+                sql = 'INSERT INTO processojudicial (procedente, reu) values (%s, %s)'
+                self.execute(sql, [procedente, reu])
+                print(f"Processo Judicial ({procedente} | {reu}) created")
+            except Exception as e:
+                print(f"Error when creating processojudicial\n{e}")
 
 if __name__ == "__main__":
     main()

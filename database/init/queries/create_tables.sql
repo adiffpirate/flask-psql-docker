@@ -15,7 +15,7 @@ CREATE TABLE Individuo(
 );
 
 CREATE TABLE ProcessoJudicial(
-    ProcessId int PRIMARY KEY,
+    ProcessId SERIAL PRIMARY KEY,
     Procedente boolean,
     DataTermino date,
     Reu varchar(35),
