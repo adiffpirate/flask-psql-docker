@@ -26,19 +26,37 @@
 			font-family: Arial, Helvetica, sans-serif;
 			border-collapse: collapse;
 		}
+		#warning-table {
+			font-family: Arial, Helvetica, sans-serif;
+			border-collapse: collapse;
+		}
 
 		#pretty td, #pretty th {
 			border: 1px solid #ddd;
 			text-align: center;
 			padding: 8px;
 		}
+		#warning-table td, #warning-table th {
+			border: 1px solid #ddd;
+			text-align: center;
+			padding: 8px;
+		}
 
 		#pretty tr:nth-child(even){background-color: #f2f2f2;}
+		#warning-table tr:nth-child(even){background-color: #f2f2f2;}
 
 		#pretty caption {
 			padding-top: 12px;
 			padding-bottom: 12px;
 			background-color: #7F00FF;
+			text-align: center;
+			color: white;
+			display: table-caption;
+		}
+		#warning-table caption {
+			padding-top: 12px;
+			padding-bottom: 12px;
+			background-color: #8B0000;
 			text-align: center;
 			color: white;
 			display: table-caption;
@@ -76,40 +94,25 @@
 				</div>
 			</div>
 
+			<br><br>
+
 			<table id="pretty" class="table table-striped table-responsive table-bordered">
-				<caption>Lista tudo</caption>
+				<caption>Consulta</caption>
 				<tbody>
 					<tr>
-						<td><a href="/select/all?table=partido"><button type="button">Partidos</a></td>
-						<td><a href="/select/all?table=individuo"><button type="button">Indivíduos</a></td>
-						<td><a href="/select/all?table=processojudicial"><button type="button">Processos Judiciais</a></td>
-						<td><a href="/select/all?table=pleito"><button type="button">Pleitos</a></td>
-						<td><a href="/select/all?table=candidatura"><button type="button">Candidaturas</a></td>
-						<td><a href="/select/all?table=cargo"><button type="button">Cargos</a></td>
-						<td><a href="/select/all?table=equipedeapoio"><button type="button">Equipe de apoio</a></td>
-						<td><a href="/select/all?table=doacao"><button type="button">Doações</a></td>
+						<td><a href="/consulta?tabela=partido"><button type="button">Partidos</a></td>
+						<td><a href="/consulta?tabela=individuo"><button type="button">Indivíduos</a></td>
+						<td><a href="/consulta?tabela=processojudicial"><button type="button">Processos Judiciais</a></td>
+						<td><a href="/consulta?tabela=pleito"><button type="button">Pleitos</a></td>
+						<td><a href="/consulta?tabela=candidatura"><button type="button">Candidaturas</a></td>
+						<td><a href="/consulta?tabela=cargo"><button type="button">Cargos</a></td>
+						<td><a href="/consulta?tabela=equipedeapoio"><button type="button">Equipe de apoio</a></td>
+						<td><a href="/consulta?tabela=doacao"><button type="button">Doações</a></td>
 					</tr>
 				</tbody>
 			</table>
 
-			<table id="pretty" class="table table-striped table-responsive table-bordered">
-				<caption>Exclui tudo</caption>
-				<tbody>
-					<tr>
-						<td><a href="/delete/all?table=partido"><button type="button">Partidos</a></td>
-						<td><a href="/delete/all?table=individuo"><button type="button">Indivíduos</a></td>
-						<td><a href="/delete/all?table=processojudicial"><button type="button">Processos Judiciais</a></td>
-						<td><a href="/delete/all?table=pleito"><button type="button">Pleitos</a></td>
-						<td><a href="/delete/all?table=candidatura"><button type="button">Candidaturas</a></td>
-						<td><a href="/delete/all?table=cargo"><button type="button">Cargos</a></td>
-						<td><a href="/delete/all?table=equipedeapoio"><button type="button">Equipe de apoio</a></td>
-						<td><a href="/delete/all?table=doacao"><button type="button">Doações</a></td>
-					</tr>
-				</tbody>
-			</table>
-			{% if deleted_all_warning %}
-				<p id="warning">{{ deleted_all_warning }}<p/>
-			{% endif %}
+			<br><br>
 
 			<table id="pretty" class="table table-striped table-responsive table-bordered">
 				<caption>Relatórios</caption>
@@ -121,6 +124,7 @@
 				</tbody>
 			</table>
 
+			<!--
 			<table id="pretty" class="table table-striped table-responsive table-bordered">
 				<caption>Consulta</caption>
 				<tbody>
@@ -130,14 +134,14 @@
 
 								<label for="tabela">Tabela:</label>
 								<select name="tabela" id="tabela">
-									<!-- <option value="partido">Partidos</option> -->
-									<!-- <option value="individuo">Indivíduos</option> -->
-									<!-- <option value="processojudicial">Processos Judiciais</option> -->
-									<!-- <option value="pleito">Pleitos</option> -->
+									<option value="partido">Partidos</option>
+									<option value="individuo">Indivíduos</option>
+									<option value="processojudicial">Processos Judiciais</option>
+									<option value="pleito">Pleitos</option>
 									<option value="candidatura">Candidaturas</option>
-									<!-- <option value="cargo">Cargos</option> -->
-									<!-- <option value="equipedeapoio">Equipe de apoio</option> -->
-									<!-- <option value="doacao">Doações</option> -->
+									<option value="cargo">Cargos</option>
+									<option value="equipedeapoio">Equipe de apoio</option>
+									<option value="doacao">Doações</option>
 								</select>
 
 								<p>Filtrar pelos campos:</p>
@@ -162,6 +166,28 @@
 					</tr>
 				</tbody>
 			</table>
+			-->
+
+			<br><br><br><br><br><br><br><br>
+
+			<table id="warning-table" class="table table-striped table-responsive table-bordered">
+				<caption>Exclui tudo</caption>
+				<tbody>
+					<tr>
+						<td><a href="/delete/all?table=partido"><button type="button">Partidos</a></td>
+						<td><a href="/delete/all?table=individuo"><button type="button">Indivíduos</a></td>
+						<td><a href="/delete/all?table=processojudicial"><button type="button">Processos Judiciais</a></td>
+						<td><a href="/delete/all?table=pleito"><button type="button">Pleitos</a></td>
+						<td><a href="/delete/all?table=candidatura"><button type="button">Candidaturas</a></td>
+						<td><a href="/delete/all?table=cargo"><button type="button">Cargos</a></td>
+						<td><a href="/delete/all?table=equipedeapoio"><button type="button">Equipe de apoio</a></td>
+						<td><a href="/delete/all?table=doacao"><button type="button">Doações</a></td>
+					</tr>
+				</tbody>
+			</table>
+			{% if deleted_all_warning %}
+				<p id="warning">{{ deleted_all_warning }}<p/>
+			{% endif %}
 		</div>
 	</body>
 </html>

@@ -2,6 +2,15 @@
 <html>
 
 	<style>
+		#page-header {
+			padding-top: 12px;
+			padding-bottom: 12px;
+			background-color: #301934;
+			text-align: center;
+			color: white;
+			display: table-caption;
+		}
+
 		#pretty {
 			font-family: Arial, Helvetica, sans-serif;
 			border-collapse: collapse;
@@ -11,16 +20,25 @@
 		#pretty td, #pretty th {
 			border: 1px solid #ddd;
 			padding: 8px;
+			text-align: center;
 		}
 
 		#pretty tr:nth-child(even){background-color: #f2f2f2;}
 
 		#pretty tr:hover {background-color: #ddd;}
 
+		#pretty caption {
+			padding-top: 12px;
+			padding-bottom: 12px;
+			background-color: #301934;
+			text-align: center;
+			color: white;
+			display: table-caption;
+		}
+
 		#pretty th {
 			padding-top: 12px;
 			padding-bottom: 12px;
-			text-align: left;
 			background-color: #7F00FF;
 			color: white;
 		}
@@ -35,7 +53,7 @@
 			content: "";
 			clear: both;
 			display: table;
-		} 
+		}
 	</style>
 
 	<head>
@@ -57,12 +75,43 @@
 				</div>
 			</div>
 
+			<br><br>
+
+			{% if all_fields %}
+				<form>
+
+					<input type="hidden" name="tabela" id="table" value="{{ table }}">
+
+					<p>Filtrar pelos campos:</p>
+					{% for field in all_fields %}
+						<label for="{{ field }}">{{ field.title() }}</label>
+						<input type="checkbox" name="campo" id="field-{{ field }}" value="{{ field }}">
+					{% endfor %}
+
+					<p>Ordenar por:</p>
+					{% for field in all_fields %}
+						<label for="ordenar-por-{{ field }}">{{ field.title() }}</label>
+						<input type="radio" name="ordenar-por" id="order-by-{{ field }}" value="{{ field }}">
+					{% endfor %}
+
+					<br><br>
+					<label for="where">Condição</label>
+					<input type="text" name="condicao" id="where">
+
+					<br><br>
+					<input type="submit" value="Atualizar">
+					<br><br><br><br>
+
+				</form>
+			{% endif %}
+
 			<table id="pretty" class="table table-striped table-responsive table-bordered">
+				<caption>{{ title }}</caption>
 
 				<thead>
 					<tr>
-						{% for header in headers %}
-							<th>{{ header.title() }}</th>
+						{% for field in fields %}
+							<th>{{ field.title() }}</th>
 						{% endfor %}
 					</tr>
 				</thead>

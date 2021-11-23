@@ -3,6 +3,7 @@ import csv
 import os
 import random
 import datetime
+import time
 
 def main():
     random.seed(22)
@@ -170,6 +171,26 @@ class Populate(Connection):
                 print(f"Error when creating individuo\n{e}")
 
 
+    # https://stackoverflow.com/a/553320
+    def str_time_prop(self, start, end, time_format, prop):
+        """Get a time at a proportion of a range of two formatted times.
+
+        start and end should be strings specifying times formatted in the
+        given format (strftime-style), giving an interval [start, end].
+        prop specifies how a proportion of the interval to be taken after
+        start.  The returned time will be in the specified format.
+        """
+
+        stime = time.mktime(time.strptime(start, time_format))
+        etime = time.mktime(time.strptime(end, time_format))
+
+        ptime = stime + prop * (etime - stime)
+
+        return time.strftime(time_format, time.localtime(ptime))
+
+    def random_date(self, start, end, prop):
+        return self.str_time_prop(start, end, '%Y-%m-%d', prop)
+
     def create_processos_judiciais(self):
         # Get list of individuos from database
         individuos = self.query("SELECT nome FROM individuo WHERE tipo = 'PF'")
@@ -177,12 +198,12 @@ class Populate(Connection):
         for reu in individuos:
             if random.choice([True, False]):
                 try:
-                    # Procedente
                     procedente = random.choice([True, False])
+                    data_termino = self.random_date("2000-1-1", "2021-11-22", random.random())
                     # Run query
-                    sql = 'INSERT INTO processojudicial (procedente, reu) values (%s, %s)'
-                    self.execute(sql, [procedente, reu])
-                    print(f"Processo Judicial ({procedente} | {reu}) created")
+                    sql = 'INSERT INTO processojudicial (procedente, datatermino, reu) values (%s, %s, %s)'
+                    self.execute(sql, [procedente, data_termino, reu])
+                    print(f"Processo Judicial ({procedente} | {data_termino} | {reu}) created")
                 except Exception as e:
                     print(f"Error when creating processojudicial\n{e}")
 
