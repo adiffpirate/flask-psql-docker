@@ -8,7 +8,7 @@ def main():
     random.seed(22)
     populate = Populate()
     populate.create_tables('queries/create_tables.sql')
-    # populate.create_triggers('queries/create_triggers.sql')
+    populate.create_triggers('queries/create_triggers.sql')
     populate.create_partidos('test_data/partidos.csv')
     populate.create_individuos('test_data/individuos.csv')
     populate.create_processos_judiciais()
