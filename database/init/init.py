@@ -184,5 +184,65 @@ class Populate(Connection):
             except Exception as e:
                 print(f"Error when creating processojudicial\n{e}")
 
+
+    def create_pleitos_and_candidaturas(self, csv_filepath):
+        try:
+            referencias_iterator = csv.reader(open(csv_filepath))
+        except Exception as e:
+            print(f"Error when reading csv file containing referencias\n{e}")
+            exit(1)
+
+        # Parse referencias csv file
+        country = set()
+        state = set()
+        city = set()
+        for ref in referencias_iterator:
+            name = ref[0]
+            category = ref[1]
+            if category == 'país':
+                country.add(name)
+            elif category == 'estado':
+                state.add(name)
+            elif category == 'cidade':
+                city.add(name)
+
+        # Get list of individuos from database
+        individuos = self.query("SELECT nome FROM individuo WHERE tipo = 'PF'")
+
+        candidaturas_amount = random.randint(200, len(individuos))
+        for i in range(candidaturas_amount):
+            try:
+                # Create pleito
+                total_de_votos = random.randint(1, 100000000) if random.choice([True, False]) else None
+                pleito = i
+                self.execute(
+                    "INSERT INTO pleito (pleitoid, totaldevotos) VALUES (%s, %s)",
+                    [pleito, total_de_votos]
+                )
+                print(f"Pleito ({i} | {total_de_votos}) created")
+                # Create candidatura
+                candidato = random.choice(individuos)
+                ano = random.choice(2000, 2021)
+                vice_candidato = random.choice(individuos) if random.choice([True, False]) else None
+                numero = random.randint(10, 999999)
+                nomecargo = random.choice(['Presidente', 'DepFederal', 'Senador', 'Governador', 'Prefeito'])
+                if nomecargo == 'Presidente':
+                    referencia = random.choice(country)
+                elif nomecargo == 'DepFederal':
+                    referencia = random.choice(country)
+                elif nomecargo == 'Senador':
+                    referencia = random.choice(country)
+                elif nomecargo == 'Governador':
+                    referencia = random.choice(state)
+                elif nomecargo == 'Prefeito':
+                    referencia = random.choice(city)
+                self.execute(
+                    "INSERT INTO candidatura (candidato, ano, vicecandidato, numero, pleito, nomecargo, referencia) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                    [candidato, ano, vice_candidato, numero, pleito, nomecargo, referencia]
+                )
+                print(f"Candidatura ({candidato} | {ano} | {vice_candidato} | {numero} | {pleito} | {nomecargo} | {referencia}) created")
+            except Exception as e:
+                print(f"Error when creating processojudicial\n{e}")
+
 if __name__ == "__main__":
     main()
