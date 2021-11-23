@@ -12,4 +12,4 @@ WHERE
 		procedente = TRUE
 		AND ((CURRENT_DATE::DATE - dataTermino::DATE) > 1825)
 	)
-ORDER BY procedente, dataTermino DESC
+ORDER BY procedente DESC, dataTermino DESC, individuo.nome
