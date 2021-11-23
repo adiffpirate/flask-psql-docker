@@ -7,7 +7,6 @@ services:
       args:
         PYTHON_VERSION: $APP_PYTHON_VERSION
     environment:
-      FLASK_ENV: $ENV
       DB_USER: $DB_USER
       DB_PASSWORD: $DB_PASSWORD
       DB_DATABASE: $DB_DATABASE
@@ -53,21 +52,6 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  db_admin:
-    image: dpage/pgadmin4:$DB_ADMIN_VERSION
-    environment:
-      PGADMIN_DEFAULT_EMAIL: $DB_ADMIN_EMAIL
-      PGADMIN_DEFAULT_PASSWORD: $DB_ADMIN_PASSWORD
-    ports:
-      - target: 80
-        published: $DB_ADMIN_PORT
-        mode: host
-    depends_on:
-      - db
-    volumes:
-      - db_admin_data:/var/lib/pgadmin
-
 volumes:
   db_data:
-  db_admin_data:
   db_init_control:
