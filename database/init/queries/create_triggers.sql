@@ -108,7 +108,7 @@ BEGIN
     IF NOT EXISTS (SELECT * FROM eleitos WHERE Candidato = new.Candidato) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Presidente no ano indicado.';
     ELSE
-        new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '4 years');
+        new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '1 year');
         RETURN NEW;
     END IF;
 END;
@@ -130,7 +130,7 @@ BEGIN
     IF NOT EXISTS (SELECT * FROM eleitos WHERE Candidato = new.Candidato) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Deputado Federal no ano indicado.';
     ELSE
-        new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '4 years');
+        new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '1 year');
         RETURN NEW;
     END IF;
 END;
@@ -152,7 +152,7 @@ BEGIN
     IF NOT EXISTS (SELECT * FROM eleitos WHERE Candidato = new.Candidato) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Senador no ano indicado.';
     ELSE
-        new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '4 years');
+        new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '1 year');
         RETURN NEW;
     END IF;
 END;
@@ -174,7 +174,7 @@ BEGIN
     IF NOT EXISTS (SELECT * FROM eleitos WHERE Candidato = new.Candidato) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Governador no ano indicado.';
     ELSE
-        new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '4 years');
+        new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '1 year');
         RETURN NEW;
     END IF;
 END;
@@ -196,7 +196,7 @@ BEGIN
     IF NOT EXISTS (SELECT * FROM eleitos WHERE Candidato = new.Candidato) THEN
         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Prefeito no ano indicado.';
     ELSE
-        new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '4 years');
+        new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '1 year');
         RETURN NEW;
     END IF;
 END;
@@ -228,7 +228,7 @@ CREATE OR REPLACE FUNCTION set_vigencia() RETURNS trigger AS $set_vigencia$
 DECLARE date_string TEXT;
 BEGIN
     SELECT CONCAT(Ano, '-12-31') INTO date_string FROM Cargo WHERE (Candidato = new.Candidato AND Ano = new.Ano);
-    new.Vigencia := (TO_DATE(date_string, 'YYYY-MM-DD') + interval '4 years');
+    new.Vigencia := (TO_DATE(date_string, 'YYYY-MM-DD') + interval '1 year');
     RETURN NEW;
 END;
 $set_vigencia$ LANGUAGE plpgsql;
