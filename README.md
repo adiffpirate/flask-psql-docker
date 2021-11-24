@@ -51,5 +51,7 @@ cd database/init
 python3 init.py
 ```
 
+> All queries runned by the script are printed to stderr
+
 > The first line of the main fuction defines the random seed to use.
 > It's hardcoded now so we can have some previsibility, but you can change that.

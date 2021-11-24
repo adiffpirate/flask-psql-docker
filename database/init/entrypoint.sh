@@ -11,7 +11,7 @@ else
 		sleep 1
 	done
 
-	python3 /init.py
+	python3 /init.py 2>/.init_control/runned_queries.sql
 
 	date '+%Y%m%d-%H%M%S' > /.init_control/run_timestamp
 	echo >&2 "Saving timestamp at /.init_control/run_timestamp. DO NOT DELETE THIS FILE!"
