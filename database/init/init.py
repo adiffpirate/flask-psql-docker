@@ -293,7 +293,7 @@ class Populate(Connection):
         # Get list of individuos from database
         individuos = self.query("SELECT nome FROM individuo WHERE tipo = 'PF'")
 
-        cargos_attempts_amount = 1000
+        cargos_attempts_amount = len(individuos) * 20
         for i in range(cargos_attempts_amount):
             try:
                 candidato = random.choice(individuos)
@@ -324,7 +324,7 @@ class Populate(Connection):
         # Get list of candidatos from database
         candidatos = self.query("SELECT candidato FROM candidatura")
 
-        equipes_attempts_amount = 1000
+        equipes_attempts_amount = len(individuos) * 5
         for i in range(equipes_attempts_amount):
             try:
                 candidato = random.choice(candidatos)
@@ -345,7 +345,7 @@ class Populate(Connection):
         # Get list of candidatos from database
         candidatos = self.query("SELECT candidato FROM candidatura")
 
-        doacoes_attempts_amount = 1000
+        doacoes_attempts_amount = len(individuos) * 5
         for i in range(doacoes_attempts_amount):
             try:
                 candidato = random.choice(candidatos)

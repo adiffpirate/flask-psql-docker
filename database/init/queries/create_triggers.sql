@@ -96,90 +96,115 @@ CREATE TRIGGER VerificaDataTermino
 -- Cada cargo deve ter uma quantidade de eleitos – por exemplo, a presidência só pode ter um único
 -- eleito; o cargo de deputado federal pode ter até 500 eleitos;
 
--- verifica se presidente adicionado é o presidente eleito
-CREATE OR REPLACE FUNCTION check_pres() RETURNS trigger AS $check_pres$
-BEGIN
-    DROP TABLE IF EXISTS temp;
-    CREATE TABLE temp AS SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON c.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Presidente' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 1;
-    IF NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
-        RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Presidente no ano indicado.';
-    ELSE
-        RETURN NEW;
-    END IF;
-END;
-$check_pres$ LANGUAGE plpgsql;
+/* -- verifica se presidente adicionado é o presidente eleito */
+/* CREATE OR REPLACE FUNCTION check_pres() RETURNS trigger AS $check_pres$ */
+/* BEGIN */
+/*     CREATE TEMP TABLE eleitos ON COMMIT DROP AS */
+/*     SELECT Candidato FROM Candidatura */
+/*     WHERE (Ano = new.Ano AND NomeCargo = 'Presidente' AND Referencia = new.Referencia) */
+/*     ORDER BY (SELECT TotalDeVotos FROM Pleito WHERE (Candidatura.Pleito = Pleito.PleitoId)) */
+/*     DESC LIMIT 1; */
 
-CREATE TRIGGER VerificaPresidente
-    BEFORE INSERT OR UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_pres();
+/*     IF NOT EXISTS (SELECT * FROM eleitos WHERE Candidato = new.Candidato) THEN */
+/*         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Presidente no ano indicado.'; */
+/*     ELSE */
+/*         new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '4 years'); */
+/*         RETURN NEW; */
+/*     END IF; */
+/* END; */
+/* $check_pres$ LANGUAGE plpgsql; */
 
--- verifica se o dep. federal adicionado foi eleito
-CREATE OR REPLACE FUNCTION check_dep() RETURNS trigger AS $check_dep$
-BEGIN
-    DROP TABLE IF EXISTS temp;
-    CREATE TABLE temp AS SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON c.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'DepFederal' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 500;
-    IF NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
-        RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Deputado Federal no ano indicado.';
-    ELSE
-        RETURN NEW;
-    END IF;
-END;
-$check_dep$ LANGUAGE plpgsql;
+/* CREATE TRIGGER VerificaPresidente */
+/*     BEFORE INSERT OR UPDATE ON Cargo */
+/*     FOR EACH ROW EXECUTE PROCEDURE check_pres(); */
 
-CREATE TRIGGER VerificaDeputado
-    BEFORE INSERT OR UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_dep();
+/* -- verifica se o dep. federal adicionado foi eleito */
+/* CREATE OR REPLACE FUNCTION check_dep() RETURNS trigger AS $check_dep$ */
+/* BEGIN */
+/*     CREATE TEMP TABLE eleitos ON COMMIT DROP AS */
+/*     SELECT Candidato FROM Candidatura */
+/*     WHERE (Ano = new.Ano AND NomeCargo = 'DepFederal' AND Referencia = new.Referencia) */
+/*     ORDER BY (SELECT TotalDeVotos FROM Pleito WHERE (Candidatura.Pleito = Pleito.PleitoId)) */
+/*     DESC LIMIT 500; */
 
--- verifica se o senador adicionado foi eleito
-CREATE OR REPLACE FUNCTION check_senador() RETURNS trigger AS $check_senador$
-BEGIN
-    DROP TABLE IF EXISTS temp;
-    CREATE TABLE temp AS SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON c.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Senador' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 81;
-    IF NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
-        RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Senador no ano indicado.';
-    ELSE
-        RETURN NEW;
-    END IF;
-END;
-$check_senador$ LANGUAGE plpgsql;
+/*     IF NOT EXISTS (SELECT * FROM eleitos WHERE Candidato = new.Candidato) THEN */
+/*         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Deputado Federal no ano indicado.'; */
+/*     ELSE */
+/*         new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '4 years'); */
+/*         RETURN NEW; */
+/*     END IF; */
+/* END; */
+/* $check_dep$ LANGUAGE plpgsql; */
 
-CREATE TRIGGER VerificaSenador
-    BEFORE INSERT OR UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_senador();
+/* CREATE TRIGGER VerificaDeputado */
+/*     BEFORE INSERT OR UPDATE ON Cargo */
+/*     FOR EACH ROW EXECUTE PROCEDURE check_dep(); */
 
--- verifica se o governador adicionado éfoi eleito
-CREATE OR REPLACE FUNCTION check_gov() RETURNS trigger AS $check_gov$
-BEGIN
-    DROP TABLE IF EXISTS temp;
-    CREATE TABLE temp AS SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON c.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Governador' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 1;
-    IF NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
-        RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Governador no ano indicado.';
-    ELSE
-        RETURN NEW;
-    END IF;
-END;
-$check_gov$ LANGUAGE plpgsql;
+/* -- verifica se o senador adicionado foi eleito */
+/* CREATE OR REPLACE FUNCTION check_senador() RETURNS trigger AS $check_senador$ */
+/* BEGIN */
+/*     CREATE TEMP TABLE eleitos ON COMMIT DROP AS */
+/*     SELECT Candidato FROM Candidatura */
+/*     WHERE (Ano = new.Ano AND NomeCargo = 'Senador' AND Referencia = new.Referencia) */
+/*     ORDER BY (SELECT TotalDeVotos FROM Pleito WHERE (Candidatura.Pleito = Pleito.PleitoId)) */
+/*     DESC LIMIT 81; */
 
-CREATE TRIGGER VerificaGovernador
-    BEFORE INSERT OR UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_gov();
+/*     IF NOT EXISTS (SELECT * FROM eleitos WHERE Candidato = new.Candidato) THEN */
+/*         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Senador no ano indicado.'; */
+/*     ELSE */
+/*         new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '4 years'); */
+/*         RETURN NEW; */
+/*     END IF; */
+/* END; */
+/* $check_senador$ LANGUAGE plpgsql; */
 
--- verifica se o prefeito adicionado foi eleito
-CREATE OR REPLACE FUNCTION check_pref() RETURNS trigger AS $check_pref$
-BEGIN
-    DROP TABLE IF EXISTS temp;
-    CREATE TABLE temp AS SELECT * FROM Candidatura AS c LEFT JOIN Pleito ON c.Pleito = Pleito.PleitoId WHERE (Ano = new.Ano AND NomeCargo = 'Prefeito' AND Referencia = new.Referencia) ORDER BY TotalDeVotos DESC LIMIT 1;
-    IF NOT EXISTS (SELECT * FROM temp WHERE Candidato = new.Candidato) THEN
-        RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Prefeito no ano indicado.';
-    ELSE
-        RETURN NEW;
-    END IF;
-END;
-$check_pref$ LANGUAGE plpgsql;
+/* CREATE TRIGGER VerificaSenador */
+/*     BEFORE INSERT OR UPDATE ON Cargo */
+/*     FOR EACH ROW EXECUTE PROCEDURE check_senador(); */
 
-CREATE TRIGGER VerificaPrefeito
-    BEFORE INSERT OR UPDATE ON Cargo
-    FOR EACH ROW EXECUTE PROCEDURE check_pref();
+/* -- verifica se o governador adicionado foi eleito */
+/* CREATE OR REPLACE FUNCTION check_gov() RETURNS trigger AS $check_gov$ */
+/* BEGIN */
+/*     CREATE TEMP TABLE eleitos ON COMMIT DROP AS */
+/*     SELECT Candidato FROM Candidatura */
+/*     WHERE (Ano = new.Ano AND NomeCargo = 'Governador' AND Referencia = new.Referencia) */
+/*     ORDER BY (SELECT TotalDeVotos FROM Pleito WHERE (Candidatura.Pleito = Pleito.PleitoId)) */
+/*     DESC LIMIT 1; */
+
+/*     IF NOT EXISTS (SELECT * FROM eleitos WHERE Candidato = new.Candidato) THEN */
+/*         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Governador no ano indicado.'; */
+/*     ELSE */
+/*         new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '4 years'); */
+/*         RETURN NEW; */
+/*     END IF; */
+/* END; */
+/* $check_gov$ LANGUAGE plpgsql; */
+
+/* CREATE TRIGGER VerificaGovernador */
+/*     BEFORE INSERT OR UPDATE ON Cargo */
+/*     FOR EACH ROW EXECUTE PROCEDURE check_gov(); */
+
+/* -- verifica se o prefeito adicionado foi eleito */
+/* CREATE OR REPLACE FUNCTION check_pref() RETURNS trigger AS $check_pref$ */
+/* BEGIN */
+/*     CREATE TEMP TABLE eleitos ON COMMIT DROP AS */
+/*     SELECT Candidato FROM Candidatura */
+/*     WHERE (Ano = new.Ano AND NomeCargo = 'Prefeito' AND Referencia = new.Referencia) */
+/*     ORDER BY (SELECT TotalDeVotos FROM Pleito WHERE (Candidatura.Pleito = Pleito.PleitoId)) */
+/*     DESC LIMIT 1; */
+    
+/*     IF NOT EXISTS (SELECT * FROM eleitos WHERE Candidato = new.Candidato) THEN */
+/*         RAISE EXCEPTION 'Atualização inválida. O indivíduo não foi eleito ao cargo de Prefeito no ano indicado.'; */
+/*     ELSE */
+/*         new.Vigencia := (TO_DATE(new.Ano::TEXT || '-12-31', 'YYYY-MM-DD') + interval '4 years'); */
+/*         RETURN NEW; */
+/*     END IF; */
+/* END; */
+/* $check_pref$ LANGUAGE plpgsql; */
+
+/* CREATE TRIGGER VerificaPrefeito */
+/*     BEFORE INSERT OR UPDATE ON Cargo */
+/*     FOR EACH ROW EXECUTE PROCEDURE check_pref(); */
 
 -- verifica se indivíduo já faz parte de alguma equipe de apoio no ano determinado
 CREATE OR REPLACE FUNCTION check_equipe() RETURNS trigger AS $check_equipe$
@@ -203,17 +228,19 @@ CREATE OR REPLACE FUNCTION set_vigencia() RETURNS trigger AS $set_vigencia$
 DECLARE date_string TEXT;
 BEGIN
     SELECT CONCAT(Ano, '-12-31') INTO date_string FROM Cargo WHERE (Candidato = new.Candidato AND Ano = new.Ano);
-    UPDATE Cargo SET Vigencia = (TO_DATE(date_string, 'YYYY-MM-DD') + interval '4 years') WHERE (Candidato = new.Candidato AND Ano = new.Ano);
+    new.Vigencia := (TO_DATE(date_string, 'YYYY-MM-DD') + interval '4 years');
     RETURN NEW;
 END;
 $set_vigencia$ LANGUAGE plpgsql;
 
 CREATE TRIGGER SetVigencia
-    AFTER INSERT OR UPDATE ON Cargo
+    BEFORE INSERT OR UPDATE ON Cargo
     FOR EACH ROW EXECUTE PROCEDURE set_vigencia();
 
 -- verifica se indivíduo já fez uma doação na campanha atual do candidato
 CREATE OR REPLACE FUNCTION check_doacao() RETURNS trigger AS $check_doacao$
+DECLARE
+    pessoa_tipo varchar(5);
 BEGIN
     SELECT Tipo INTO pessoa_tipo FROM Individuo WHERE (Nome = new.Apoiador);
     IF pessoa_tipo = 'PJ' AND EXISTS (
